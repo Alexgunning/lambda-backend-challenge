@@ -1,13 +1,8 @@
 import fetch, { Response, FetchError } from 'node-fetch'
-import { InternalResponse } from './types'
+import { ErrorResponse, InternalResponse } from './types'
 
 interface DogBreedListResponse extends InternalResponse {
   body: string[]
-  statusCode: number
-}
-
-interface DogBreedListErrorResponse extends InternalResponse {
-  errorMessage: string
   statusCode: number
 }
 
@@ -20,10 +15,23 @@ interface DogBreedList {
   status: string
 }
 
-export async function handler(): Promise<DogBreedListResponse | DogBreedListErrorResponse> {
+export async function handler(): Promise<DogBreedListResponse | ErrorResponse> {
+  const url = 'https://dog.ceo/api/breeds/list/all'
   let res: Response
   try {
-    res = await fetch('https://dog.ceo/api/breeds/list/all')
+    // set a 2.5 second timer for the api request
+    const timer = new Promise(resolve => {
+      setTimeout(resolve, 2500, 'timeout')
+    })
+    // calling a promise race to check whether the api request or two second timer finishes first
+    const timeOutRes = await Promise.race([fetch(url), timer])
+    if (timeOutRes === 'timeout')
+      return {
+        statusCode: 500,
+        errorMessage: 'Network Request Timeout',
+      }
+    // Set res to the network request since it did not time out
+    res = timeOutRes as Response
   } catch (e) {
     // Handle unreachable addresses
     // Tested on https://frog.ceo/api/breeds/list/all
@@ -56,7 +64,7 @@ export async function handler(): Promise<DogBreedListResponse | DogBreedListErro
     }
     return dogMappings[breed]
   })
-  //flatten array of arrays
+  // flatten array of arrays
   const flattendDogBreeds = Array.prototype.concat.apply([], dogBreeds)
 
   return {

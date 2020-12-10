@@ -4,3 +4,8 @@
 export interface InternalResponse {
   statusCode: number
 }
+
+export interface ErrorResponse extends InternalResponse {
+  errorMessage: string
+  statusCode: number
+}
