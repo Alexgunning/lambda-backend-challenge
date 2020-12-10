@@ -1,7 +1,7 @@
 import fetch from 'node-fetch'
-import { Response } from './types'
+import { InternalResponse } from './types'
 
-interface StuffResponse extends Response {
+interface StuffResponse extends InternalResponse {
   body: RandomDog
 }
 
